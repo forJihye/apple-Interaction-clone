@@ -16,12 +16,6 @@
   let currentScene = 0; // 현재 활성화 된 영역 스크롤 섹션
   let enterNewScene = false // 새로운 구간이 시작되었다는 깃발 역할
 
-  // 부드러운 애니메이션 감속 설정
-  let acc = 0.2;
-  let delayedYOffset = 0;
-  let rafId;
-  let rafState;
-
   // 섹션 (신) 정보 기본 환경 설정
   const sceneInfo = [
     {
@@ -156,7 +150,6 @@
     }
   }
 
-  // 네비게이션 sticky 적용
   function checkMenu() {
     if (yOffset > 44) {
       document.body.classList.add('local-nav-sticky');
@@ -203,13 +196,13 @@
     }
     
     // 애니메이션 활성화 섹션 찾기
-    if (delayedYOffset > prevScrollHeight + sceneInfo[currentScene]?.scrollHeight) { // 스크롤 내릴 때
+    if (yOffset > prevScrollHeight + sceneInfo[currentScene]?.scrollHeight) { // 스크롤 내릴 때
       enterNewScene = true;
       currentScene++;
       document.body.setAttribute("id", `show-scene-${currentScene}`);
     } 
 
-    if (delayedYOffset < prevScrollHeight) { // 스크롤 올릴 때
+    if (yOffset < prevScrollHeight) { // 스크롤 올릴 때
       enterNewScene = true;
       if (currentScene === 0) return; // 맥이나 모바일에서 스크롤 위로 올릴 때 위로 바운스 되어서 마이너스값을 막아주는 역할
       currentScene--;
@@ -266,38 +259,46 @@
     // 해당되는 구간 애니메이션을 재생시킨다. (나머지 애니메이션은 정지) 
     if (currentScene === 0) {
       // 비디오 시퀀시
-      // let sequence = Math.round(calcValues(values.imageSequence, currentYOffset));
-      // elms.videoImages[sequence] && elms.context.drawImage(elms.videoImages[sequence], 0, 0, 1920, 1080);
+      let sequence = Math.round(calcValues(values.imageSequence, currentYOffset));
+      elms.videoImages[sequence] && elms.context.drawImage(elms.videoImages[sequence], 0, 0, 1920, 1080);
       elms.canvas.style.opacity = calcValues(values.canvas_opacity, currentYOffset);
 
-      if (scrollRatio <= 0.22) { // in
+      if (scrollRatio <= 0.22) {
+        // in
         elms.messageA.style.opacity = calcValues(values.messageA_opacity_in, currentYOffset);
         elms.messageA.style.transform = `translate3d(0, ${calcValues(values.messageA_translateY_in, currentYOffset)}%, 0)`;
-      } else { // out
+      } else {
+        // out
         elms.messageA.style.opacity = calcValues(values.messageA_opacity_out, currentYOffset);
         elms.messageA.style.transform = `translate3d(0, ${calcValues(values.messageA_translateY_out, currentYOffset)}%, 0)`;
       }
 
-      if (scrollRatio <= 0.42) { // in
+      if (scrollRatio <= 0.42) {
+        // in
         elms.messageB.style.opacity = calcValues(values.messageB_opacity_in, currentYOffset);
         elms.messageB.style.transform = `translate3d(0, ${calcValues(values.messageB_translateY_in, currentYOffset)}%, 0)`;
-      } else { // out
+      } else {
+          // out
         elms.messageB.style.opacity = calcValues(values.messageB_opacity_out, currentYOffset);
         elms.messageB.style.transform = `translate3d(0, ${calcValues(values.messageB_translateY_out, currentYOffset)}%, 0)`;
       }
 
-      if (scrollRatio <= 0.62) { // in
+      if (scrollRatio <= 0.62) {
+        // in
         elms.messageC.style.opacity = calcValues(values.messageC_opacity_in, currentYOffset);
         elms.messageC.style.transform = `translate3d(0, ${calcValues(values.messageC_translateY_in, currentYOffset)}%, 0)`;
-      } else { // out
+      } else {
+        // out
         elms.messageC.style.opacity = calcValues(values.messageC_opacity_out, currentYOffset);
         elms.messageC.style.transform = `translate3d(0, ${calcValues(values.messageC_translateY_out, currentYOffset)}%, 0)`;
       }
 
-      if (scrollRatio <= 0.82) { // in
+      if (scrollRatio <= 0.82) {
+        // in
         elms.messageD.style.opacity = calcValues(values.messageD_opacity_in, currentYOffset);
         elms.messageD.style.transform = `translate3d(0, ${calcValues(values.messageD_translateY_in, currentYOffset)}%, 0)`;
-      } else { // out
+      } else {
+        // out
         elms.messageD.style.opacity = calcValues(values.messageD_opacity_out, currentYOffset);
         elms.messageD.style.transform = `translate3d(0, ${calcValues(values.messageD_translateY_out, currentYOffset)}%, 0)`;
       }
@@ -306,8 +307,8 @@
 
     }
     else if (currentScene === 2) {
-      // let sequence2 = Math.round(calcValues(values.imageSequence, currentYOffset));
-      // elms.videoImages[sequence2] && elms.context.drawImage(elms.videoImages[sequence2], 0, 0, 1920, 1080);
+      let sequence2 = Math.round(calcValues(values.imageSequence, currentYOffset));
+      elms.videoImages[sequence2] && elms.context.drawImage(elms.videoImages[sequence2], 0, 0, 1920, 1080);
 
       if (scrollRatio <= 0.5) {
         elms.canvas.style.opacity = calcValues(values.canvas_opacity_in, currentYOffset);
@@ -491,64 +492,20 @@
       }
     }
   }
-  
-  // requestAnimationFrame Loop
-  function loop() {
-    delayedYOffset = delayedYOffset + (yOffset - delayedYOffset) * acc; // 감속이 있는 스크롤 값
-
-    const currentYOffset = delayedYOffset - prevScrollHeight; // 현재 스크롤 비율 = 전체 스크롤 높이 / 현재 섹션 스크롤 높이
-    
-    if (!enterNewScene) {
-      if (currentScene === 0 || currentScene === 2) {
-        const { elms, values } = sceneInfo[currentScene];
-        let sequence = Math.round(calcValues(values.imageSequence, currentYOffset));
-        elms.videoImages[sequence] && elms.context.drawImage(elms.videoImages[sequence], 0, 0, 1920, 1080);
-      } 
-    }
-
-    rafId = requestAnimationFrame(loop);
-
-    // console.log('loop');
-    if (Math.abs(yOffset - delayedYOffset) < 1) {
-      cancelAnimationFrame(rafId);
-      rafState = false;
-    }
-  }
 
   // window.addEventListener('DOMContentLoaded', setLayout); // HTML 돔 구조 로드가 끝나면 실행
   window.addEventListener('load', () => {
     setLayout();
-    document.body.classList.remove('before-load');
-    // 초기화 작업 
-    const canvas0Image = sceneInfo[0].elms.videoImages[0] 
+    // 초기화 작업
+    const canvas0Image = sceneInfo[0].elms.videoImages[0]
     sceneInfo[0].elms.context.drawImage(canvas0Image, 0, 0);
-
-    // 리사이즈 이벤트    
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 600) window.location.reload(); // setLayout();
-      // sceneInfo[3].values.rectStartY = 0;
-    });
-    // 모바일 디바이스 회전 이벤트
-    window.addEventListener('orientationchange', setLayout) 
-
-    // 화면 스크롤 이벤트
-    window.addEventListener('scroll', (ev) => {
-      yOffset = window.scrollY;
-      checkMenu()
-      scrollLoop();
-      if (!rafState) {
-        rafId = requestAnimationFrame(loop);
-        rafState = true;
-      }
-    });
-    
-    // 로딩 완료 후 로딩 섹션 삭제
-    $('.loading').addEventListener('transitionend', (ev) => {
-      document.body.removeChild(ev.target);
-    });
   }); 
-
+  window.addEventListener('resize', setLayout);
+  window.addEventListener('scroll', (ev) => {
+    yOffset = window.scrollY;
+    checkMenu()
+    scrollLoop();
+  });
   setCanvasImages();
-  
   console.log(sceneInfo);
 })();

@@ -518,37 +518,25 @@
   // window.addEventListener('DOMContentLoaded', setLayout); // HTML 돔 구조 로드가 끝나면 실행
   window.addEventListener('load', () => {
     setLayout();
-    document.body.classList.remove('before-load');
-    // 초기화 작업 
-    const canvas0Image = sceneInfo[0].elms.videoImages[0] 
+    const canvas0Image = sceneInfo[0].elms.videoImages[0] // 초기화 작업 
     sceneInfo[0].elms.context.drawImage(canvas0Image, 0, 0);
-
-    // 리사이즈 이벤트    
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 600) window.location.reload(); // setLayout();
-      // sceneInfo[3].values.rectStartY = 0;
-    });
-    // 모바일 디바이스 회전 이벤트
-    window.addEventListener('orientationchange', setLayout) 
-
-    // 화면 스크롤 이벤트
-    window.addEventListener('scroll', (ev) => {
-      yOffset = window.scrollY;
-      checkMenu()
-      scrollLoop();
-      if (!rafState) {
-        rafId = requestAnimationFrame(loop);
-        rafState = true;
-      }
-    });
-    
-    // 로딩 완료 후 로딩 섹션 삭제
-    $('.loading').addEventListener('transitionend', (ev) => {
-      document.body.removeChild(ev.target);
-    });
   }); 
 
-  setCanvasImages();
+  window.addEventListener('resize', setLayout);
+
+  window.addEventListener('scroll', (ev) => {
+    yOffset = window.scrollY;
+    checkMenu()
+    scrollLoop();
+
+    window.addEventListener('scroll', () => {
+			if (!rafState) {
+				rafId = requestAnimationFrame(loop);
+				rafState = true;
+			}
+		});
+  });
   
+  setCanvasImages();
   console.log(sceneInfo);
 })();

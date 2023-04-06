@@ -23,8 +23,8 @@
 
 	<script>
 		const box = document.querySelector('.box');
-		let acc = 0.1;
-		let delayedYOffset = 0;
+		let acc = 0.1; // 감도?
+		let delayedYOffset = 0; // 지연된 스크롤의 Y위치
 		let rafId;
 		let rafState;
 
@@ -37,8 +37,13 @@
 		});
 
 		function loop() {
+			// 이동량이 작아지면 속도도 낮아짐
+			// C 시작 위치, D 종료 위치
+			// C와 D의 거리 차이는 D-C=거리차이
+			// (목표 지점 - 현재 지점) * 0.1 + 현재 지점 = 현재 박스의 크기
 			delayedYOffset = delayedYOffset + (pageYOffset - delayedYOffset) * acc;
 			box.style.width = `${delayedYOffset}px`;
+			// box.style.width = `${pageYOffset}px`;
 			console.log('loop');
 
 			rafId = requestAnimationFrame(loop);

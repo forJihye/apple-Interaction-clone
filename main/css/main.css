@@ -217,7 +217,7 @@ body.before-load {
 	transition: 0.5s;
 }
 .before-load .container {
-    display: none;
+	display: none;
 }
 .before-load .loading {
 	opacity: 1;
@@ -289,7 +289,7 @@ body.before-load {
 		font-size: 4vw;
 	}
 	.canvas-caption {
-		margin-top: -8rem;
+		margin-top: -5em;
 		padding: 0;
 		font-size: 2rem;
 	}
