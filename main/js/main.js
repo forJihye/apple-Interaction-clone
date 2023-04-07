@@ -64,10 +64,11 @@
     {
       id: 1,
       type: 'normal',
-      heightNum: 5,
+      // heightNum: 5,
       scrollHeight: 0,
       elms: {
         container: $('#scroll-section-1'),
+        content: $('#scroll-section-1 .description')
       }
     },
     {
@@ -170,8 +171,8 @@
     for (let i = 0; i < sceneInfo.length; i++) {
       if (sceneInfo[i].type === 'sticky') {
         sceneInfo[i].scrollHeight = sceneInfo[i].heightNum * window.innerHeight;
-      } else { 
-        sceneInfo[i].scrollHeight = sceneInfo[i].elms.container.offsetHeight;
+      } else if (sceneInfo[i].type === 'normal') { 
+        sceneInfo[i].scrollHeight = window.innerHeight * 0.5 + sceneInfo[i].elms.content.offsetHeight;
       }
       sceneInfo[i].elms.container.style.height = `${sceneInfo[i].scrollHeight}px`;
     }
@@ -201,11 +202,20 @@
     for (let i = 0; i < currentScene; i++) {
       prevScrollHeight += sceneInfo[i].scrollHeight;
     }
+
+    if (delayedYOffset < prevScrollHeight + sceneInfo[currentScene]?.scrollHeight) {
+      document.body.classList.remove('scroll-effect-end');
+    }
     
     // 애니메이션 활성화 섹션 찾기
     if (delayedYOffset > prevScrollHeight + sceneInfo[currentScene]?.scrollHeight) { // 스크롤 내릴 때
       enterNewScene = true;
-      currentScene++;
+      if (currentScene === sceneInfo.length - 1) {
+        document.body.classList.add('scroll-effect-end');
+      }
+      if (currentScene < sceneInfo.length - 1) {
+        currentScene++;
+      }
       document.body.setAttribute("id", `show-scene-${currentScene}`);
     } 
 
@@ -402,7 +412,7 @@
       // console.log(recalculatedInnerWidth, recalculatedInnerHeight) 
       
       // 스크롤 시 기준값 한 번 저장 (스크롤 할 떄마다 기준값이 바뀌면 안됨)
-      if (values.rectStartY === 0) { // 좌우 흰색 박스 애니메이션 시작 시작점 - 종료점 구간 설정
+      if (!values.rectStartY) { // 좌우 흰색 박스 애니메이션 시작 시작점 - 종료점 구간 설정
         // values.rectStartY = elms.canvas.getBoundingClientRect().top; // 스크롤 속도에 따라 결과가 반환됨 (고정되지않고 계속 바뀌는것이 문제)
         // 3번 구간이 시작 될 때 정확한 스크롤 값을 구하기 위함
         // offsetTop 기준점을 바쑬 수 있음 - 위치 기준을  내 부모 기준으로 나의 위치를 가져오기 위해 CSS position: relative 추가
@@ -419,17 +429,19 @@
       const whiteRectWidth = recalculatedInnerWidth * 0.15 // 상대 크기로 (innerWidth의 15%)
       values.rect1X[0] = (elms.canvas.width - recalculatedInnerWidth) / 2;
       values.rect1X[1] = values.rect1X[0] - whiteRectWidth; // 화면 밖으로 나가야 함.
-      values.rect2X[0] = (values.rect1X[0] + recalculatedInnerWidth) - whiteRectWidth;
+
+      values.rect2X[0] = values.rect1X[0] + recalculatedInnerWidth - whiteRectWidth;
       values.rect2X[1] = values.rect2X[0] + whiteRectWidth;
       // console.log(values.rect1X, values.rect2X)
 
       // 좌우 흰색 박스 그리기
-      elms.context.fillRect(calcValues(values.rect1X, currentYOffset), 0, whiteRectWidth, elms.canvas.height)
-      elms.context.fillRect(calcValues(values.rect2X, currentYOffset), 0, whiteRectWidth, elms.canvas.height)
+      elms.context.fillRect(parseInt(calcValues(values.rect1X, currentYOffset)), 0, whiteRectWidth, elms.canvas.height)
+      elms.context.fillRect(parseInt(calcValues(values.rect2X, currentYOffset)), 0, whiteRectWidth, elms.canvas.height)
       // elms.context.fillRect(values.rect1X[0], 0, whiteRectWidth, elms.canvas.height)
       // elms.context.fillRect(values.rect2X[0], 0, whiteRectWidth, elms.canvas.height)
 
       let step = 0;
+      
       if (scrollRatio < values.rect1X[2].end) { // 캔버스가 브라우저 상단에 닿기 전
         step = 1;
         // console.log(1)
@@ -437,9 +449,6 @@
       } else { // 캔버스가 브라우저 상단에 닿은 후 - 이미지 블렌드 시작
         step = 2;
         // console.log(2)
-        elms.canvas.classList.add('sticky');
-        elms.canvas.style.top = `${-(elms.canvas.height - (elms.canvas.height * canvasScaleRatio)) / 2}px`; // 캔버스 트랜스폼 스케일 CSS 때문에 top으로 땡겨줘야함
-
         // blendHeight: [ 0, 0, { start: 0, end: 0 }] - 블렌드 이미지 (바다 사진)
         values.blendHeight[0] = 0;
         values.blendHeight[1] = elms.canvas.height; 
@@ -457,11 +466,14 @@
           0, elms.canvas.height - blendHeight, elms.canvas.width, blendHeight
         );
 
+        elms.canvas.classList.add('sticky');
+        elms.canvas.style.top = `${-(elms.canvas.height - (elms.canvas.height * canvasScaleRatio)) / 2}px`; // 캔버스 트랜스폼 스케일 CSS 때문에 top으로 땡겨줘야함
+
         // 크기 스케일 조절 시작
         if (scrollRatio > values.blendHeight[2].end) {
           // console.log('크기 조절 시작');
           values.canvasScale[0] = canvasScaleRatio;
-          values.canvasScale[1] = document.body.offsetWidth / (elms.canvas.width * 1.5);
+          values.canvasScale[1] = document.body.offsetWidth / (1.5 * elms.canvas.width );
           values.canvasScale[2].start = values.blendHeight[2].end;
           values.canvasScale[2].end = values.canvasScale[2].start + 0.2;
           // console.log(values.canvasScale)
@@ -480,11 +492,12 @@
 
           values.canvasCaption_opacity[2].start = values.canvasScale[2].end;
           values.canvasCaption_opacity[2].end = values.canvasCaption_opacity[2].start + 0.1;
-          elms.canvasCaption.style.opacity = calcValues(values.canvasCaption_opacity, currentYOffset);
-
-          values.canvasCaption_translateY[2].start = values.canvasScale[2].end;
+          
+          values.canvasCaption_translateY[2].start = values.canvasCaption_opacity[2].start;
           values.canvasCaption_translateY[2].end = values.canvasCaption_opacity[2].end;
-          elms.canvasCaption.style.transform = `translate3D(0, ${calcValues(values.canvasCaption_translateY, currentYOffset)}, 0)`;
+
+          elms.canvasCaption.style.opacity = calcValues(values.canvasCaption_opacity, currentYOffset);
+          elms.canvasCaption.style.transform = `translate3D(0, ${calcValues(values.canvasCaption_translateY, currentYOffset)}%, 0)`;
         } else {
           elms.canvasCaption.style.opacity = values.canvasCaption_opacity[0];
         }
@@ -516,21 +529,29 @@
   }
 
   // window.addEventListener('DOMContentLoaded', setLayout); // HTML 돔 구조 로드가 끝나면 실행
-  window.addEventListener('load', () => {
-    setLayout();
+  window.addEventListener('load', () => { 
+    setLayout(); // 중간에 새로고침 시, 콘텐츠 양에 따라 높이 계산에 오차가 발생하는 경우를 방지하기 위해 before-load 클래스 제거 전에도 확실하게 높이를 세팅하도록 한번 더 실행
     document.body.classList.remove('before-load');
+    setLayout();
+
     // 초기화 작업 
     const canvas0Image = sceneInfo[0].elms.videoImages[0] 
     sceneInfo[0].elms.context.drawImage(canvas0Image, 0, 0);
 
-    // 리사이즈 이벤트    
-    window.addEventListener('resize', () => {
-      if (window.innerWidth > 600) window.location.reload(); // setLayout();
-      // sceneInfo[3].values.rectStartY = 0;
-    });
-    // 모바일 디바이스 회전 이벤트
-    window.addEventListener('orientationchange', setLayout) 
-
+    // 중간에서 새로고침 했을 경우 자동 스크롤로 제대로 그려주기
+    let tempYOffset = yOffset; // 현재 스크롤 위치를 저장 (임시적)
+    let tempScrollCount = 0; // 스크롤 작동 카운트
+    if (tempYOffset > 0) {
+      let interval = setInterval(() => {
+        window.scrollTo(0, tempYOffset); // 비동기 작업으로 지연이 필요함
+        tempYOffset += 5;
+        if (tempScrollCount > 20) {
+          clearInterval(interval);
+        }
+        tempScrollCount++;
+      }, 20);
+    }
+    
     // 화면 스크롤 이벤트
     window.addEventListener('scroll', (ev) => {
       yOffset = window.scrollY;
@@ -541,7 +562,18 @@
         rafState = true;
       }
     });
-    
+  
+    // 리사이즈 이벤트    
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 900) window.location.reload(); // setLayout();
+      sceneInfo[3].values.rectStartY = 0;
+    });
+    // 모바일 디바이스 회전 이벤트
+    window.addEventListener('orientationchange', () => {
+      window.scrollTo(0, 0);
+      setTimeout(() => window.location.reload(), 500);
+    }) 
+
     // 로딩 완료 후 로딩 섹션 삭제
     $('.loading').addEventListener('transitionend', (ev) => {
       document.body.removeChild(ev.target);
